@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}LocalShop{% endblock %}</title>
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        body { background-color: #f8f9fa; }
+
+        .sidebar {
+            min-height: 100vh;
+            background-color: #1a1a2e;
+            width: 240px;
+            position: fixed;
+            top: 0; left: 0;
+            padding-top: 20px;
+            z-index: 100;
+        }
+
+        .sidebar .shop-name {
+            color: #ffffff;
+            font-size: 1.1rem;
+            font-weight: 600;
+            padding: 10px 20px 20px;
+            border-bottom: 1px solid #ffffff20;
+        }
+
+        .sidebar a {
+            display: block;
+            color: #ffffffaa;
+            padding: 12px 20px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .sidebar a:hover, .sidebar a.active {
+            color: #ffffff;
+            background-color: #ffffff15;
+            border-left: 3px solid #16a34a;
+        }
+
+        .sidebar .nav-icon {
+            margin-right: 8px;
+        }
+
+        .main-content {
+            margin-left: 240px;
+            padding: 30px;
+        }
+
+        .topbar {
+            background: #ffffff;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 12px 30px;
+            margin-left: 240px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stat-card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .stat-card .number {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .badge-low-stock {
+            background-color: #fef3c7;
+            color: #92400e;
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            border-radius: 20px;
+        }
+
+        {% block extra_style %}{% endblock %}
+    </style>
+</head>
+<body>
+
+{% if user.is_authenticated %}
+<!-- Sidebar -->
+<div class="sidebar">
+    <div class="shop-name">
+        <i class="bi bi-shop"></i>
+        {% if shop %}{{ shop.name }}{% else %}LocalShop{% endif %}
+    </div>
+
+    <a href="{% url 'dashboard_home' %}" class="{% if request.resolver_match.url_name == 'dashboard_home' %}active{% endif %}">
+        <i class="bi bi-speedometer2 nav-icon"></i> Dashboard
+    </a>
+    <a href="{% url 'product_list' %}" class="{% if 'product' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="bi bi-box-seam nav-icon"></i> Products
+    </a>
+    <a href="{% url 'order_list' %}" class="{% if 'order' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="bi bi-bag-check nav-icon"></i> Orders
+    </a>
+    <a href="{% url 'delivery_rule' %}" class="{% if request.resolver_match.url_name == 'delivery_rule' %}active{% endif %}">
+        <i class="bi bi-truck nav-icon"></i> Delivery Rules
+    </a>
+    <a href="{% url 'coupon_list' %}" class="{% if request.resolver_match.url_name == 'coupon_list' %}active{% endif %}">
+        <i class="bi bi-tag nav-icon"></i> Coupons
+    </a>
+    <a href="{% url 'review_list' %}" class="{% if request.resolver_match.url_name == 'review_list' %}active{% endif %}">
+        <i class="bi bi-star nav-icon"></i> Reviews
+    </a>
+    <a href="{% url 'damage_reports' %}" class="{% if request.resolver_match.url_name == 'damage_reports' %}active{% endif %}">
+        <i class="bi bi-exclamation-triangle nav-icon"></i> Damage Reports
+    </a>
+
+    <div style="position:absolute; bottom:20px; width:100%;">
+        <a href="{% url 'owner_logout' %}" style="color:#ff6b6b;">
+            <i class="bi bi-box-arrow-left nav-icon"></i> Logout
+        </a>
+    </div>
+</div>
+
+<!-- Top bar -->
+<div class="topbar">
+    <span style="font-weight:500; color:#374151;">
+        {% block page_title %}Dashboard{% endblock %}
+    </span>
+    <span style="font-size:0.85rem; color:#6b7280;">
+        Welcome, {{ request.user.username }}
+    </span>
+</div>
+
+{% endif %}
+
+<!-- Main Content -->
+<div class="{% if user.is_authenticated %}main-content{% else %}container mt-5{% endif %}">
+
+    <!-- Messages / Alerts -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}success{% endif %} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    {% block content %}{% endblock %}
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

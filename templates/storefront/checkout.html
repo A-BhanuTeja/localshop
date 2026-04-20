@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout — {{ shop.name }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body { background: #f8f9fa; }
+        .topbar {
+            background: {{ shop.theme_color }};
+            color: white;
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .topbar a { color: white; text-decoration: none; }
+        .topbar h5 { margin: 0; }
+        .card {
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+        }
+        .place-btn {
+            background: {{ shop.theme_color }};
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 14px;
+            font-size: 1rem;
+            font-weight: 600;
+            width: 100%;
+        }
+        .order-summary-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            padding: 4px 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="topbar">
+    <a href="{% url 'cart' shop.slug %}">
+        <i class="bi bi-arrow-left" style="font-size:1.2rem;"></i>
+    </a>
+    <h5>Checkout</h5>
+</div>
+
+<div class="container py-3">
+    <form method="POST" id="checkout-form">
+        {% csrf_token %}
+
+        <!-- Hidden cart data -->
+        <input type="hidden" name="cart_data" id="cart-data">
+
+        <!-- Customer Details -->
+        <div class="card p-3 mb-3">
+            <h6 class="fw-bold mb-3">
+                <i class="bi bi-person"></i> Your Details
+            </h6>
+            <div class="mb-2">
+                <input type="text" name="customer_name"
+                       class="form-control"
+                       placeholder="Full Name *" required>
+            </div>
+            <div class="mb-2">
+                <input type="tel" name="customer_phone"
+                       class="form-control"
+                       placeholder="Phone Number *" required>
+            </div>
+            <div class="mb-2">
+                <input type="email" name="customer_email"
+                       class="form-control"
+                       placeholder="Email (for order confirmation) *"
+                       required>
+            </div>
+            <div>
+                <textarea name="customer_address"
+                          class="form-control" rows="3"
+                          placeholder="Delivery Address *"
+                          required></textarea>
+            </div>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="card p-3 mb-3">
+            <h6 class="fw-bold mb-3">
+                <i class="bi bi-receipt"></i> Order Summary
+            </h6>
+            <div id="summary-items">
+                <p class="text-muted">Loading...</p>
+            </div>
+            <hr>
+            <div class="order-summary-item">
+                <span class="text-muted">Products Total</span>
+                <span id="s-subtotal">₹0</span>
+            </div>
+            <div class="order-summary-item">
+                <span class="text-muted">Delivery</span>
+                <span id="s-delivery">₹0</span>
+            </div>
+            <div class="order-summary-item fw-bold mt-1">
+                <span>Grand Total</span>
+                <span id="s-grand"
+                      style="color:{{ shop.theme_color }};">
+                    ₹0
+                </span>
+            </div>
+        </div>
+
+        <!-- Coupon -->
+        <div class="card p-3 mb-3">
+            <h6 class="fw-bold mb-2">
+                <i class="bi bi-tag"></i> Coupon Code
+            </h6>
+            <div class="input-group">
+                <input type="text" name="coupon_code"
+                       id="coupon-input"
+                       class="form-control"
+                       placeholder="Enter coupon code (optional)">
+                <button type="button" class="btn btn-outline-success"
+                        onclick="applyCoupon()">
+                    Apply
+                </button>
+            </div>
+            <small id="coupon-msg" class="mt-1"></small>
+        </div>
+
+        <!-- Payment Method -->
+        <div class="card p-3 mb-3">
+            <h6 class="fw-bold mb-2">
+                <i class="bi bi-credit-card"></i> Payment Method
+            </h6>
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="radio"
+                       name="payment_method" value="cod"
+                       id="cod" checked>
+                <label class="form-check-label" for="cod">
+                    <i class="bi bi-cash"></i>
+                    Cash on Delivery
+                </label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio"
+                       name="payment_method" value="upi"
+                       id="upi">
+                <label class="form-check-label" for="upi">
+                    <i class="bi bi-phone"></i>
+                    UPI Payment
+                </label>
+            </div>
+        </div>
+
+        <button type="submit" class="place-btn"
+                onclick="submitOrder(event)">
+            <i class="bi bi-check-circle"></i>
+            Place Order
+        </button>
+
+    </form>
+</div>
+
+<script>
+    const SHOP_SLUG    = '{{ shop.slug }}';
+    const FREE_ABOVE   = {{ rule.free_delivery_above|default:500 }};
+    const CHARGE       = {{ rule.delivery_charge|default:30 }};
+
+    let cart = JSON.parse(
+        localStorage.getItem('cart_' + SHOP_SLUG) || '[]'
+    );
+
+    function renderSummary() {
+        if (cart.length === 0) {
+            window.location.href =
+                '/shop/' + SHOP_SLUG + '/';
+            return;
+        }
+
+        let html     = '';
+        let subtotal = 0;
+
+        cart.forEach(item => {
+            const total = item.price * item.qty;
+            subtotal   += total;
+            html += `<div class="order-summary-item">
+                <span>${item.name} × ${item.qty}</span>
+                <span>₹${total.toFixed(2)}</span>
+            </div>`;
+        });
+
+        document.getElementById('summary-items').innerHTML = html;
+
+        const delivery = subtotal >= FREE_ABOVE ? 0 : CHARGE;
+        const grand    = subtotal + delivery;
+
+        document.getElementById('s-subtotal').textContent =
+            '₹' + subtotal.toFixed(2);
+        document.getElementById('s-delivery').textContent =
+            delivery === 0 ? 'FREE' : '₹' + delivery.toFixed(2);
+        document.getElementById('s-grand').textContent =
+            '₹' + grand.toFixed(2);
+    }
+
+    function applyCoupon() {
+        const code = document.getElementById('coupon-input').value;
+        const msg  = document.getElementById('coupon-msg');
+        if (!code) return;
+        msg.textContent = 'Coupon applied! Discount will show in total.';
+        msg.style.color = 'green';
+    }
+
+    function submitOrder(e) {
+        e.preventDefault();
+        // Put cart data into hidden field
+        document.getElementById('cart-data').value =
+            JSON.stringify(cart);
+        // Clear cart after order
+        localStorage.removeItem('cart_' + SHOP_SLUG);
+        document.getElementById('checkout-form').submit();
+    }
+
+    renderSummary();
+</script>
+</body>
+</html>

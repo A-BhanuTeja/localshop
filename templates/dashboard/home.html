@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard — {{ shop.name }}{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+
+<!-- Stats Row -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="text-muted" style="font-size:0.85rem;">Total Orders</div>
+            <div class="number text-success">{{ total_orders }}</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="text-muted" style="font-size:0.85rem;">Pending Orders</div>
+            <div class="number text-warning">{{ pending_orders }}</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="text-muted" style="font-size:0.85rem;">Total Products</div>
+            <div class="number text-primary">{{ total_products }}</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="text-muted" style="font-size:0.85rem;">Shop Status</div>
+            <div class="mt-2">
+                {% if shop.is_open %}
+                    <span class="badge bg-success fs-6">Open</span>
+                {% else %}
+                    <span class="badge bg-danger fs-6">Closed</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Links -->
+<div class="row g-3">
+    <div class="col-md-4">
+        <div class="stat-card text-center">
+            <i class="bi bi-box-seam" style="font-size:2rem; color:#16a34a;"></i>
+            <h6 class="mt-2">Manage Products</h6>
+            <a href="{% url 'product_list' %}" class="btn btn-outline-success btn-sm mt-1">
+                Go to Products
+            </a>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card text-center">
+            <i class="bi bi-bag-check" style="font-size:2rem; color:#3b82f6;"></i>
+            <h6 class="mt-2">View Orders</h6>
+            <a href="{% url 'order_list' %}" class="btn btn-outline-primary btn-sm mt-1">
+                Go to Orders
+            </a>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card text-center">
+            <i class="bi bi-truck" style="font-size:2rem; color:#f59e0b;"></i>
+            <h6 class="mt-2">Delivery Rules</h6>
+            <a href="{% url 'delivery_rule' %}" class="btn btn-outline-warning btn-sm mt-1">
+                Set Rules
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Shop Link -->
+<div class="mt-4 p-3 bg-white rounded border">
+    <small class="text-muted">Your shop link — share this with customers:</small>
+    <div class="mt-1">
+        <a href="/shop/{{ shop.slug }}/" target="_blank" 
+           style="color:#16a34a; font-weight:500;">
+            http://127.0.0.1:8000/shop/{{ shop.slug }}/
+        </a>
+    </div>
+</div>
+
+{% endblock %}

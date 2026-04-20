@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ shop.name }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body { background: #f8f9fa; }
+
+        .shop-header {
+            background: {{ shop.theme_color }};
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .shop-header h1 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .shop-header p {
+            margin: 4px 0 0;
+            opacity: 0.85;
+            font-size: 0.9rem;
+        }
+
+        .navbar-shop {
+            background: white;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e5e7eb;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .cart-btn {
+            background: {{ shop.theme_color }};
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 6px 16px;
+            font-size: 0.85rem;
+            text-decoration: none;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #e5e7eb;
+            transition: transform 0.15s;
+        }
+
+        .product-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .product-img {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+        }
+
+        .product-img-placeholder {
+            width: 100%;
+            height: 160px;
+            background: #f3f4f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .badge-low {
+            background: #fef3c7;
+            color: #92400e;
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .badge-expiry {
+            background: #fee2e2;
+            color: #991b1b;
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 20px;
+        }
+
+        .add-btn {
+            background: {{ shop.theme_color }};
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 6px 14px;
+            font-size: 0.85rem;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        .add-btn:hover { opacity: 0.9; }
+
+        .closed-banner {
+            background: #fee2e2;
+            color: #991b1b;
+            text-align: center;
+            padding: 12px;
+            font-weight: 500;
+        }
+
+        .search-bar {
+            padding: 12px 20px;
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Shop Header -->
+<div class="shop-header">
+    {% if shop.logo %}
+        <img src="{{ shop.logo.url }}"
+             style="width:60px; height:60px; border-radius:50%;
+                    object-fit:cover; margin-bottom:8px;">
+    {% endif %}
+    <h1>{{ shop.name }}</h1>
+    {% if shop.tagline %}
+        <p>{{ shop.tagline }}</p>
+    {% endif %}
+</div>
+
+<!-- Closed Banner -->
+{% if not shop.is_open %}
+<div class="closed-banner">
+    <i class="bi bi-clock"></i> {{ shop.closed_msg }}
+</div>
+{% endif %}
+
+<!-- Sticky Navbar -->
+<div class="navbar-shop">
+    <span style="font-weight:600; color:#374151;">
+        {{ shop.name }}
+    </span>
+    <a href="{% url 'cart' shop.slug %}" class="cart-btn">
+        <i class="bi bi-cart"></i>
+        Cart
+        <span id="cart-count"
+              style="background:white;
+                     color:{{ shop.theme_color }};
+                     border-radius:50%;
+                     padding:0 6px;
+                     font-weight:700;
+                     font-size:0.8rem;">
+            0
+        </span>
+    </a>
+</div>
+
+<!-- Search Bar -->
+<div class="search-bar">
+    <input type="text" id="search-input"
+           class="form-control"
+           placeholder="Search products...">
+</div>
+
+<!-- Products -->
+<div class="container py-3">
+    {% if products %}
+    <div class="row g-3" id="product-grid">
+        {% for product in products %}
+        <div class="col-6 col-md-4 product-item"
+             data-name="{{ product.name|lower }}">
+            <div class="product-card">
+
+                {% if product.image %}
+                    <img src="{{ product.image.url }}"
+                         class="product-img">
+                {% else %}
+                    <div class="product-img-placeholder">
+                        <i class="bi bi-image text-muted"
+                           style="font-size:2.5rem;"></i>
+                    </div>
+                {% endif %}
+
+                <div class="p-2">
+                    <div class="d-flex justify-content-between
+                                align-items-start mb-1">
+                        <h6 class="mb-0 fw-bold"
+                            style="font-size:0.9rem;">
+                            {{ product.name }}
+                        </h6>
+                    </div>
+
+                    <!-- Badges -->
+                    <div class="mb-1">
+                        {% if product.is_low_stock %}
+                            <span class="badge-low">
+                                Only {{ product.stock_count }} left!
+                            </span>
+                        {% endif %}
+                        {% if product.expiry_date %}
+                            <span class="badge-expiry">
+                                Exp: {{ product.expiry_date }}
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <div class="fw-bold mb-2"
+                         style="color:{{ shop.theme_color }};">
+                        ₹{{ product.price }}
+                    </div>
+
+                    {% if shop.is_open %}
+                    <button class="add-btn"
+                            onclick="addToCart(
+                                '{{ product.id }}',
+                                '{{ product.name }}',
+                                '{{ product.price }}'
+                            )">
+                        <i class="bi bi-plus"></i> Add to Cart
+                    </button>
+                    {% else %}
+                    <button class="add-btn"
+                            style="opacity:0.5;" disabled>
+                        Shop Closed
+                    </button>
+                    {% endif %}
+
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% else %}
+    <div class="text-center py-5 text-muted">
+        <i class="bi bi-box-seam" style="font-size:4rem;"></i>
+        <h5 class="mt-3">No products available</h5>
+    </div>
+    {% endif %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Cart stored in localStorage
+    let cart = JSON.parse(localStorage.getItem('cart_{{ shop.slug }}') || '[]');
+
+    function updateCartCount() {
+        const total = cart.reduce((sum, item) => sum + item.qty, 0);
+        document.getElementById('cart-count').textContent = total;
+    }
+
+    function addToCart(id, name, price) {
+        const existing = cart.find(i => i.id === id);
+        if (existing) {
+            existing.qty += 1;
+        } else {
+            cart.push({ id, name, price: parseFloat(price), qty: 1 });
+        }
+        localStorage.setItem('cart_{{ shop.slug }}', JSON.stringify(cart));
+        updateCartCount();
+
+        // Visual feedback
+        event.target.textContent = 'Added!';
+        setTimeout(() => {
+            event.target.innerHTML = '<i class="bi bi-plus"></i> Add to Cart';
+        }, 800);
+    }
+
+    // Search
+    document.getElementById('search-input').addEventListener('input', function() {
+        const query = this.value.toLowerCase();
+        document.querySelectorAll('.product-item').forEach(item => {
+            const name = item.getAttribute('data-name');
+            item.style.display = name.includes(query) ? 'block' : 'none';
+        });
+    });
+
+    updateCartCount();
+</script>
+</body>
+</html>
