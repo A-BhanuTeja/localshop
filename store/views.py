@@ -310,3 +310,27 @@ def submit_damage(request, shop_slug, pk):
         )
         messages.success(request, 'Damage report submitted!')
     return redirect('order_tracking', shop_slug=shop_slug, pk=pk)
+
+# ── REVIEW REPLY (owner) ─────────────────────
+@login_required(login_url='/dashboard/login/')
+def review_reply(request, pk):
+    shop   = get_object_or_404(Shop, owner=request.user)
+    review = get_object_or_404(Review, pk=pk, order__shop=shop)
+    if request.method == 'POST':
+        review.owner_reply = request.POST.get('reply', '')
+        review.save()
+        messages.success(request, 'Reply posted!')
+    return redirect('review_list')
+
+
+# ── DAMAGE RESOLVE (owner) ───────────────────
+@login_required(login_url='/dashboard/login/')
+def damage_resolve(request, pk):
+    shop   = get_object_or_404(Shop, owner=request.user)
+    report = get_object_or_404(DamageReport, pk=pk, order__shop=shop)
+    if request.method == 'POST':
+        report.resolution_note = request.POST.get('resolution_note', '')
+        report.status          = 'resolved'
+        report.save()
+        messages.success(request, 'Report marked as resolved!')
+    return redirect('damage_reports')

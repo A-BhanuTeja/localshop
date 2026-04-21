@@ -25,7 +25,9 @@ urlpatterns = [
 
     # damage reports
     path('damage-reports/', views.damage_reports, name='damage_reports'),
-
+    # add these two lines after damage-reports/
+    path('reviews/reply/<int:pk>/',   views.review_reply,   name='review_reply'),
+    path('damage/resolve/<int:pk>/', views.damage_resolve, name='damage_resolve'),
     # reviews
     path('reviews/', views.review_list, name='review_list'),
 
